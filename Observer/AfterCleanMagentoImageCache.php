@@ -79,6 +79,10 @@ class AfterCleanMagentoImageCache implements ObserverInterface
      */
     public function execute(Observer $observer): void
     {
+        if (!$this->cleanCloudflareConfig->isUsed()) {
+            return;
+        }
+
         $paths = $observer->getPaths();
         $key = $this->cloudflareAPIKeyFactory->create(
             [
