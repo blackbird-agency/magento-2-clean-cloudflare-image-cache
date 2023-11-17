@@ -1,0 +1,27 @@
+{
+  "name": "blackbird/magento-2-clean-cloudflare-image-cache",
+  "version": "1.0.0",
+  "description": "Use Cloudflare API to purge image cache url at product save.",
+  "type": "magento2-module",
+  "require": {
+    "magento/framework": "*",
+    "blackbird/magento-2-clean-product-image-cache": "*",
+    "cloudflare/sdk": "*"
+  },
+  "authors": [
+    {
+        "name": "Blackbird Agency",
+        "email": "contact@bird.eu",
+        "homepage": "https://black.bird.eu"
+    }
+  ],
+  "license": "MIT",
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "Blackbird\\CleanCloudflareImageCache\\": ""
+    }
+  }
+}

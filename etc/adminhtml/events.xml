@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="blackbird_image_cache_clean_after">
+        <observer name="blackbird_purge_cloudflare" instance="Blackbird\CleanCloudflareImageCache\Observer\AfterCleanMagentoImageCache"/>
+    </event>
+</config>

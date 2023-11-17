@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="blackbird_clean_image_cache">
+            <group id="cloudflare" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1">
+                <label>Cloudflare</label>
+                <field id="is_used" type="select" translate="label" sortOrder="10"  showInDefault="1" showInWebsite="1">
+                    <label>Is used</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Did you use Cloudflare ?</comment>
+                    <config_path>blackbird_clean_image_cache/cloudflare/is_used</config_path>
+                </field>
+                <field id="email" type="text" translate="label" sortOrder="20"  showInDefault="1" showInWebsite="1">
+                    <label>Email</label>
+                    <comment>Email to authenticate you for the API</comment>
+                    <config_path>blackbird_clean_image_cache/cloudflare/email</config_path>
+                    <depends>
+                        <field id="is_used">1</field>
+                    </depends>
+                </field>
+                <field id="api_key" type="obscure" translate="label" sortOrder="30"  showInDefault="1" showInWebsite="1">
+                    <label>API Key</label>
+                    <config_path>blackbird_clean_image_cache/cloudflare/api_key</config_path>
+                    <depends>
+                        <field id="is_used">1</field>
+                    </depends>
+                </field>
+                <field id="zone_id" type="obscure" translate="label" sortOrder="40"  showInDefault="1" showInWebsite="1">
+                    <label>Zone ID</label>
+                    <comment>You can find it in the right bottom on Overview page of your Cloudflare account.</comment>
+                    <config_path>blackbird_clean_image_cache/cloudflare/zone_id</config_path>
+                    <depends>
+                        <field id="is_used">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>
+
