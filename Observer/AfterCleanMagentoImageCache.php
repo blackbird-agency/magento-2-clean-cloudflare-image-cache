@@ -12,6 +12,7 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\UrlInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class AfterCleanMagentoImageCache
@@ -19,6 +20,8 @@ use Magento\Framework\UrlInterface;
  **/
 class AfterCleanMagentoImageCache implements ObserverInterface
 {
+    // Maximum 30 prefixes per API call.
+    public const API_PURGE_LIMIT = 30;
     /**
      * @var \Magento\Framework\App\Filesystem\DirectoryList
      */
@@ -50,6 +53,11 @@ class AfterCleanMagentoImageCache implements ObserverInterface
     protected UrlInterface $url;
 
     /**
+     * @var LoggerInterface
+     */
+    protected LoggerInterface $logger;
+
+    /**
      * @param \Magento\Framework\App\Filesystem\DirectoryList $directoryList
      * @param \Blackbird\CleanCloudflareImageCache\Model\Config $cleanCloudflareConfig
      * @param \Cloudflare\API\Auth\APIKeyFactory $cloudflareAPIKeyFactory
@@ -58,19 +66,22 @@ class AfterCleanMagentoImageCache implements ObserverInterface
      * @param \Magento\Framework\UrlInterface $url
      */
     public function __construct(
-        DirectoryList $directoryList,
-        CleanCloudflareConfig $cleanCloudflareConfig,
+        DirectoryList           $directoryList,
+        CleanCloudflareConfig   $cleanCloudflareConfig,
         CloudflareAPIKeyFactory $cloudflareAPIKeyFactory,
-        GuzzleAdapterFactory $guzzleAdapterFactory,
-        CloudflareZonesFactory $cloudflareZonesFactory,
-        UrlInterface $url
-    ) {
+        GuzzleAdapterFactory    $guzzleAdapterFactory,
+        CloudflareZonesFactory  $cloudflareZonesFactory,
+        UrlInterface            $url,
+        LoggerInterface         $logger
+    )
+    {
         $this->directoryList = $directoryList;
         $this->cleanCloudflareConfig = $cleanCloudflareConfig;
         $this->cloudflareAPIKeyFactory = $cloudflareAPIKeyFactory;
         $this->guzzleAdapterFactory = $guzzleAdapterFactory;
         $this->cloudflareZonesFactory = $cloudflareZonesFactory;
         $this->url = $url;
+        $this->logger = $logger;
     }
 
     /**
@@ -102,9 +113,13 @@ class AfterCleanMagentoImageCache implements ObserverInterface
         }
 
         try {
-            $zone->cachePurge($this->cleanCloudflareConfig->getZoneId(), $urlToClean);
+            foreach (\array_chunk($urlToClean, self::API_PURGE_LIMIT) as $urlChunk) {
+                $zone->cachePurge($this->cleanCloudflareConfig->getZoneId(), $urlChunk);
+            }
         } catch (EndpointException $e) {
             //Do nothing, it only throw if there is no url to clean
+        } catch (\Exception $e) {
+            $this->logger->error($e);
         }
     }
 }
