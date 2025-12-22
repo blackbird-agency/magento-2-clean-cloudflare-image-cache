@@ -6,6 +6,7 @@ namespace Blackbird\CleanCloudflareImageCache\Observer;
 use Blackbird\CleanCloudflareImageCache\Model\Config as CleanCloudflareConfig;
 use Cloudflare\API\Adapter\GuzzleFactory as GuzzleAdapterFactory;
 use Cloudflare\API\Auth\APIKeyFactory as CloudflareAPIKeyFactory;
+use Cloudflare\API\Auth\APITokenFactory as CloudflareAPITokenFactory;
 use Cloudflare\API\Endpoints\EndpointException;
 use Cloudflare\API\Endpoints\ZonesFactory as CloudflareZonesFactory;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -29,6 +30,7 @@ class AfterCleanMagentoImageCache implements ObserverInterface
      * @param DirectoryList $directoryList
      * @param CleanCloudflareConfig $cleanCloudflareConfig
      * @param CloudflareAPIKeyFactory $cloudflareAPIKeyFactory
+     * @param CloudflareAPITokenFactory $cloudflareAPITokenFactory
      * @param GuzzleAdapterFactory $guzzleAdapterFactory
      * @param CloudflareZonesFactory $cloudflareZonesFactory
      * @param LoggerInterface $logger
@@ -38,6 +40,7 @@ class AfterCleanMagentoImageCache implements ObserverInterface
         protected DirectoryList $directoryList,
         protected CleanCloudflareConfig $cleanCloudflareConfig,
         protected CloudflareAPIKeyFactory $cloudflareAPIKeyFactory,
+        protected CloudflareAPITokenFactory $cloudflareAPITokenFactory,
         protected GuzzleAdapterFactory $guzzleAdapterFactory,
         protected CloudflareZonesFactory $cloudflareZonesFactory,
         protected LoggerInterface $logger,
@@ -56,13 +59,22 @@ class AfterCleanMagentoImageCache implements ObserverInterface
         }
 
         $paths = $observer->getPaths();
-        $key = $this->cloudflareAPIKeyFactory->create(
-            [
-                'email' => $this->cleanCloudflareConfig->getEmail(),
-                'apiKey' => $this->cleanCloudflareConfig->getApiKey()
-            ]
-        );
-        $adapter = $this->guzzleAdapterFactory->create(['auth' => $key]);
+        if ($this->cleanCloudflareConfig->getApiToken()) {
+            $auth = $this->cloudflareAPITokenFactory->create([
+                'apiToken' => (string)$this->cleanCloudflareConfig->getApiToken()
+            ]);
+            $adapter = $this->guzzleAdapterFactory->create([
+                'auth' => $auth
+            ]);
+        } else {
+            $key = $this->cloudflareAPIKeyFactory->create(
+                [
+                    'email' => (string)$this->cleanCloudflareConfig->getEmail(),
+                    'apiKey' => (string)$this->cleanCloudflareConfig->getApiKey()
+                ]
+            );
+            $adapter = $this->guzzleAdapterFactory->create(['auth' => $key]);
+        }
         $zone = $this->cloudflareZonesFactory->create(['adapter' => $adapter]);
         $pubPath = $this->directoryList->getPath(DirectoryList::PUB) . '/';
         $mediaBaseUrl = $this->storeManager->getDefaultStoreView()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
@@ -73,6 +85,10 @@ class AfterCleanMagentoImageCache implements ObserverInterface
             $urlToClean[] = $mediaBaseUrl . $path;
         }
 
+        if (empty($urlToClean)) {
+            return;
+        }
+
         try {
             foreach (\array_chunk($urlToClean, self::API_PURGE_LIMIT) as $urlChunk) {
                 if ($this->cleanCloudflareConfig->isDebugEnabled()) {
@@ -80,7 +96,7 @@ class AfterCleanMagentoImageCache implements ObserverInterface
                         $this->logger->info(sprintf('Cloudflare clean URL: %s', $url));
                     }
                 }
-                $zone->cachePurge($this->cleanCloudflareConfig->getZoneId(), $urlChunk);
+                $zone->cachePurge((string)$this->cleanCloudflareConfig->getZoneId(), $urlChunk);
             }
         } catch (EndpointException $e) {
             //Do nothing, it only throw if there is no url to clean

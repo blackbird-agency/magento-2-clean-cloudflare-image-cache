@@ -26,6 +26,14 @@
                         <field id="is_used">1</field>
                     </depends>
                 </field>
+                <field id="api_token" type="obscure" translate="label" sortOrder="35" showInDefault="1" showInWebsite="1">
+                    <label>API Token</label>
+                    <comment>Cloudflare API Token (Bearer). If set, it will be used instead of Email and API Key.</comment>
+                    <config_path>blackbird_clean_image_cache/cloudflare/api_token</config_path>
+                    <depends>
+                        <field id="is_used">1</field>
+                    </depends>
+                </field>
                 <field id="zone_id" type="obscure" translate="label" sortOrder="40"  showInDefault="1" showInWebsite="1">
                     <label>Zone ID</label>
                     <comment>You can find it in the right bottom on Overview page of your Cloudflare account.</comment>

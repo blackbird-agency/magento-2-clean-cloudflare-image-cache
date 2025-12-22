@@ -16,6 +16,7 @@ class Config
     protected const CONFIG_PATH_CLOUDFLARE_IS_USED = 'blackbird_clean_image_cache/cloudflare/is_used';
     protected const CONFIG_PATH_CLOUDFLARE_EMAIL = 'blackbird_clean_image_cache/cloudflare/email';
     protected const CONFIG_PATH_CLOUDFLARE_API_KEY = 'blackbird_clean_image_cache/cloudflare/api_key';
+    protected const CONFIG_PATH_CLOUDFLARE_API_TOKEN = 'blackbird_clean_image_cache/cloudflare/api_token';
     protected const CONFIG_PATH_CLOUDFLARE_ZONE_ID = 'blackbird_clean_image_cache/cloudflare/zone_id';
     protected const CONFIG_PATH_CLOUDFLARE_DEBUG = 'blackbird_clean_image_cache/cloudflare/debug';
 
@@ -67,6 +68,19 @@ class Config
     {
         return $this->scopeConfig->getValue(
             self::CONFIG_PATH_CLOUDFLARE_API_KEY,
+            ScopeInterface::SCOPE_WEBSITE,
+            $websiteId
+        );
+    }
+
+    /**
+     * @param $websiteId
+     * @return string|null
+     */
+    public function getApiToken($websiteId = null): ?string
+    {
+        return $this->scopeConfig->getValue(
+            self::CONFIG_PATH_CLOUDFLARE_API_TOKEN,
             ScopeInterface::SCOPE_WEBSITE,
             $websiteId
         );
