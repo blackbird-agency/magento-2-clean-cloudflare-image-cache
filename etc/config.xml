@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <blackbird_clean_image_cache>
+            <cloudflare>
+                <is_used>0</is_used>
+                <debug>0</debug>
+            </cloudflare>
+        </blackbird_clean_image_cache>
+    </default>
+</config>

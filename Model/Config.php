@@ -17,6 +17,7 @@ class Config
     protected const CONFIG_PATH_CLOUDFLARE_EMAIL = 'blackbird_clean_image_cache/cloudflare/email';
     protected const CONFIG_PATH_CLOUDFLARE_API_KEY = 'blackbird_clean_image_cache/cloudflare/api_key';
     protected const CONFIG_PATH_CLOUDFLARE_ZONE_ID = 'blackbird_clean_image_cache/cloudflare/zone_id';
+    protected const CONFIG_PATH_CLOUDFLARE_DEBUG = 'blackbird_clean_image_cache/cloudflare/debug';
 
     /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
@@ -79,6 +80,19 @@ class Config
     {
         return $this->scopeConfig->getValue(
             self::CONFIG_PATH_CLOUDFLARE_ZONE_ID,
+            ScopeInterface::SCOPE_WEBSITE,
+            $websiteId
+        );
+    }
+
+    /**
+     * @param $websiteId
+     * @return bool
+     */
+    public function isDebugEnabled($websiteId = null): bool
+    {
+        return (bool) $this->scopeConfig->getValue(
+            self::CONFIG_PATH_CLOUDFLARE_DEBUG,
             ScopeInterface::SCOPE_WEBSITE,
             $websiteId
         );
