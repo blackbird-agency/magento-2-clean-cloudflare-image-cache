@@ -5,15 +5,18 @@ namespace Blackbird\CleanCloudflareImageCache\Observer;
 
 use Blackbird\CleanCloudflareImageCache\Model\Config as CleanCloudflareConfig;
 use Cloudflare\API\Adapter\GuzzleFactory as GuzzleAdapterFactory;
+use Cloudflare\API\Auth\APIKey;
 use Cloudflare\API\Auth\APIKeyFactory as CloudflareAPIKeyFactory;
 use Cloudflare\API\Auth\APITokenFactory as CloudflareAPITokenFactory;
 use Cloudflare\API\Endpoints\EndpointException;
 use Cloudflare\API\Endpoints\ZonesFactory as CloudflareZonesFactory;
+use Magento\Catalog\Model\Product;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Store\Model\Store;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -58,50 +61,59 @@ class AfterCleanMagentoImageCache implements ObserverInterface
             return;
         }
 
+        /** @var Product $product */
+        $product = $observer->getProduct();
         $paths = $observer->getPaths();
-        if ($this->cleanCloudflareConfig->getApiToken()) {
-            $auth = $this->cloudflareAPITokenFactory->create([
-                'apiToken' => (string)$this->cleanCloudflareConfig->getApiToken()
-            ]);
-            $adapter = $this->guzzleAdapterFactory->create([
-                'auth' => $auth
-            ]);
-        } else {
-            $key = $this->cloudflareAPIKeyFactory->create(
-                [
-                    'email' => (string)$this->cleanCloudflareConfig->getEmail(),
-                    'apiKey' => (string)$this->cleanCloudflareConfig->getApiKey()
-                ]
-            );
-            $adapter = $this->guzzleAdapterFactory->create(['auth' => $key]);
-        }
-        $zone = $this->cloudflareZonesFactory->create(['adapter' => $adapter]);
-        $pubPath = $this->directoryList->getPath(DirectoryList::PUB) . '/';
-        $mediaBaseUrl = $this->storeManager->getDefaultStoreView()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
+
+        $mediaPath = $this->directoryList->getPath(DirectoryList::MEDIA) . '/';
         $urlToClean = [];
 
-        foreach ($paths as $path) {
-            $path = \str_replace($pubPath, '', $path);
-            $urlToClean[] = $mediaBaseUrl . $path;
-        }
+        foreach ($product->getWebsiteIds() as $websiteId) {
+            $websiteId = (int) $websiteId;
+            $website = $this->storeManager->getWebsite($websiteId);
+            $baseUrl = $website->getDefaultStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
+            $zoneId = $this->cleanCloudflareConfig->getZoneId();
+            $adapter = $this->guzzleAdapterFactory->create(['auth' => $this->getAuthKey($websiteId)]);
+            $zone = $this->cloudflareZonesFactory->create(['adapter' => $adapter]);
 
-        if (empty($urlToClean)) {
-            return;
+            foreach ($paths as $path) {
+                $path = \str_replace($mediaPath, '', $path);
+                $urlToClean[$zoneId][] = $baseUrl . $path;
+            }
         }
 
         try {
-            foreach (\array_chunk($urlToClean, self::API_PURGE_LIMIT) as $urlChunk) {
+            foreach (\array_chunk($urlToClean, self::API_PURGE_LIMIT, true) as $urlChunk) {
                 if ($this->cleanCloudflareConfig->isDebugEnabled()) {
                     foreach ($urlChunk as $url) {
                         $this->logger->info(sprintf('Cloudflare clean URL: %s', $url));
                     }
                 }
-                $zone->cachePurge((string)$this->cleanCloudflareConfig->getZoneId(), $urlChunk);
+                $zoneId = array_key_first($urlChunk);
+
+                $zone->cachePurge($zoneId, $urlChunk[$zoneId]);
             }
         } catch (EndpointException $e) {
             //Do nothing, it only throw if there is no url to clean
         } catch (\Exception $e) {
             $this->logger->error($e);
         }
+    }
+
+    private function getAuthKey(int $websiteId): APIKey
+    {
+        if ($this->cleanCloudflareConfig->getApiToken($websiteId)) {
+            return $this->cloudflareAPITokenFactory->create([
+                'apiToken' => (string)$this->cleanCloudflareConfig->getApiToken($websiteId)
+            ]);
+
+        }
+
+        return $this->cloudflareAPIKeyFactory->create(
+            [
+                'email' => (string)$this->cleanCloudflareConfig->getEmail($websiteId),
+                'apiKey' => (string)$this->cleanCloudflareConfig->getApiKey($websiteId)
+            ]
+        );
     }
 }

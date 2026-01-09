@@ -22,6 +22,7 @@
                 <field id="api_key" type="obscure" translate="label" sortOrder="30"  showInDefault="1" showInWebsite="1">
                     <label>API Key</label>
                     <config_path>blackbird_clean_image_cache/cloudflare/api_key</config_path>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                     <depends>
                         <field id="is_used">1</field>
                     </depends>
@@ -30,6 +31,7 @@
                     <label>API Token</label>
                     <comment>Cloudflare API Token (Bearer). If set, it will be used instead of Email and API Key.</comment>
                     <config_path>blackbird_clean_image_cache/cloudflare/api_token</config_path>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                     <depends>
                         <field id="is_used">1</field>
                     </depends>
@@ -38,6 +40,7 @@
                     <label>Zone ID</label>
                     <comment>You can find it in the right bottom on Overview page of your Cloudflare account.</comment>
                     <config_path>blackbird_clean_image_cache/cloudflare/zone_id</config_path>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                     <depends>
                         <field id="is_used">1</field>
                     </depends>
