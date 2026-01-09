@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blackbird\CleanCloudflareImageCache\Model;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Store\Model\ScopeInterface;
 
 /**
@@ -21,17 +22,12 @@ class Config
     protected const CONFIG_PATH_CLOUDFLARE_DEBUG = 'blackbird_clean_image_cache/cloudflare/debug';
 
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
-     */
-    protected ScopeConfigInterface $scopeConfig;
-
-    /**
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        ScopeConfigInterface $scopeConfig
+        protected ScopeConfigInterface $scopeConfig,
+        protected EncryptorInterface $encryptor
     ) {
-        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -66,11 +62,11 @@ class Config
      */
     public function getApiKey($websiteId = null): ?string
     {
-        return $this->scopeConfig->getValue(
+        return $this->encryptor->decrypt($this->scopeConfig->getValue(
             self::CONFIG_PATH_CLOUDFLARE_API_KEY,
             ScopeInterface::SCOPE_WEBSITE,
             $websiteId
-        );
+        ) ?: '');
     }
 
     /**
@@ -79,11 +75,11 @@ class Config
      */
     public function getApiToken($websiteId = null): ?string
     {
-        return $this->scopeConfig->getValue(
+        return $this->encryptor->decrypt($this->scopeConfig->getValue(
             self::CONFIG_PATH_CLOUDFLARE_API_TOKEN,
             ScopeInterface::SCOPE_WEBSITE,
             $websiteId
-        );
+        ) ?: '');
     }
 
     /**
@@ -92,11 +88,11 @@ class Config
      */
     public function getZoneId($websiteId = null): ?string
     {
-        return $this->scopeConfig->getValue(
+        return $this->encryptor->decrypt($this->scopeConfig->getValue(
             self::CONFIG_PATH_CLOUDFLARE_ZONE_ID,
             ScopeInterface::SCOPE_WEBSITE,
             $websiteId
-        );
+        ) ?: '');
     }
 
     /**
