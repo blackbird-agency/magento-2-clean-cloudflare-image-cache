@@ -100,7 +100,7 @@ class AfterCleanMagentoImageCache implements ObserverInterface
         }
     }
 
-    private function getAuthKey(int $websiteId): APIKey
+    private function getAuthKey(int $websiteId)
     {
         if ($this->cleanCloudflareConfig->getApiToken($websiteId)) {
             return $this->cloudflareAPITokenFactory->create([
