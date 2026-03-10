@@ -83,18 +83,19 @@ class AfterCleanMagentoImageCache implements ObserverInterface
         }
 
         try {
-            foreach (\array_chunk($urlToClean, self::API_PURGE_LIMIT, true) as $urlChunk) {
-                if ($this->cleanCloudflareConfig->isDebugEnabled()) {
-                    foreach ($urlChunk as $url) {
-                        $this->logger->info(sprintf('Cloudflare clean URL: %s', $url));
+            foreach ($urlToClean as $zoneId => $urls) {
+                foreach (array_chunk($urls, self::API_PURGE_LIMIT) as $urlChunk) {
+                    if ($this->cleanCloudflareConfig->isDebugEnabled()) {
+                        foreach ($urlChunk as $url) {
+                            $this->logger->info(sprintf('Cloudflare clean URL: %s', $url));
+                        }
                     }
-                }
-                $zoneId = array_key_first($urlChunk);
 
-                $zone->cachePurge($zoneId, $urlChunk[$zoneId]);
+                    $zone->cachePurge($zoneId, $urlChunk);
+                }
             }
         } catch (EndpointException $e) {
-            //Do nothing, it only throw if there is no url to clean
+            // Do nothing, it only throw if there is no url to clean
         } catch (\Exception $e) {
             $this->logger->error($e);
         }
