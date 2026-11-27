@@ -72,7 +72,7 @@ class AfterCleanMagentoImageCache implements ObserverInterface
             $websiteId = (int) $websiteId;
             $website = $this->storeManager->getWebsite($websiteId);
             $baseUrl = $website->getDefaultStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
-            $zoneId = $this->cleanCloudflareConfig->getZoneId();
+            $zoneId = $this->cleanCloudflareConfig->getZoneId($websiteId);
             $adapter = $this->guzzleAdapterFactory->create(['auth' => $this->getAuthKey($websiteId)]);
             $zone = $this->cloudflareZonesFactory->create(['adapter' => $adapter]);
 
